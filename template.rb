@@ -1,7 +1,10 @@
 # .gitignore
 run "cat <<-EGI >> .gitignore
 
+*.swp
+config/database.yml
 config/application.yml
+vendor/bundle
 EGI"
 
 # Gemfile
@@ -38,4 +41,5 @@ production:
   <<: *defaults
 EOC
 
+run "cp config/database.yml config/database.yml.tmpl"
 run "cp config/application.yml.tmpl config/application.yml"
