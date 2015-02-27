@@ -1,3 +1,9 @@
+# .gitignore
+run "cat <<-EGI >> .gitignore
+
+config/application.yml
+EGI"
+
 # Gemfile
 append_file "Gemfile", <<-EGF
 
@@ -13,3 +19,23 @@ gem 'capistrano-rails', group: :development
 # settingslogic
 gem "settingslogic"
 EGF
+
+file "app/models/settings.rb", <<-'EOC'
+class Settings < Settingslogic
+  source "#{Rails.root}/config/application.yml"
+  namespace Rails.env
+end
+EOC
+
+file "config/application.yml.tmpl", <<-'EOC'
+defaults: &defaults
+
+development:
+  <<: *defaults
+test:
+  <<: *defaults
+production:
+  <<: *defaults
+EOC
+
+run "cp config/application.yml.tmpl config/application.yml"
