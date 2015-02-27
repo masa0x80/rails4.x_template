@@ -17,7 +17,10 @@ gem 'therubyracer', platforms: :ruby
 gem 'unicorn'
 
 # Use Capistrano for deployment
-gem 'capistrano-rails', group: :development
+gem 'capistrano-rails',    group: :development
+gem "capistrano-rbenv",    group: :development
+gem "capistrano-bundler",  group: :development
+gem "capistrano3-unicorn", group: :development
 
 # settingslogic
 gem "settingslogic"
