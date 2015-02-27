@@ -34,6 +34,9 @@ gem "pry-byebug", group: [:development, :test]
 
 # rspec
 gem "rspec-rails", group: [:development, :test]
+
+# annotate
+gem "annotate", group: :development
 EGF
 
 file "app/models/settings.rb", <<-'EOC'
@@ -71,4 +74,25 @@ git commit: "-m '[command] bundle exec rails g rspec:install'"
 after_bundle do
   git add: "."
   git commit: "-m '[command] bundle exec spring binstab --all'"
+
+  rakefile("auto_annotate.rake") do
+    <<-TASK.strip_heredoc
+      task :annotate do
+        puts "Annotating models..."
+        system "bundle exec annotate"
+      end
+
+      if Rails.env == "development"
+        Rake::Task["db:migrate"].enhance do
+          Rake::Task["annotate"].invoke
+        end
+
+        Rake::Task["db:rollback"].enhance do
+          Rake::Task["annotate"].invoke
+        end
+      end
+    TASK
+  end
+  git add: "."
+  git commit: "-m 'settings for annotate automatically'"
 end
