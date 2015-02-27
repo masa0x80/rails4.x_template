@@ -67,3 +67,8 @@ run "bundle exec rails g rspec:install"
 append_file ".rspec", "--format documentation"
 git add: "."
 git commit: "-m '[command] bundle exec rails g rspec:install'"
+
+after_bundle do
+  git add: "."
+  git commit: "-m '[command] bundle exec spring binstab --all'"
+end
