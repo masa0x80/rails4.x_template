@@ -21,6 +21,9 @@ gem 'capistrano-rails', group: :development
 
 # settingslogic
 gem "settingslogic"
+
+# slim-rails
+gem "slim-rails"
 EGF
 
 file "app/models/settings.rb", <<-'EOC'
