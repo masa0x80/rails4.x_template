@@ -35,6 +35,9 @@ gem "pry-byebug", group: [:development, :test]
 # rspec
 gem "rspec-rails", group: [:development, :test]
 
+# factory_girl
+gem "factory_girl_rails"
+
 # annotate
 gem "annotate", group: :development
 EGF
