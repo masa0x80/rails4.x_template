@@ -57,7 +57,7 @@ EOC
 run "cp config/database.yml config/database.yml.tmpl"
 run "cp config/application.yml.tmpl config/application.yml"
 
-run "bundle install --path=vendor/bundle"
+run "bundle install --path=vendor/bundle --jobs=4"
 run "bundle package"
 git :init
 git add: "."
