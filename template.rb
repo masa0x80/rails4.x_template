@@ -24,6 +24,10 @@ gem "settingslogic"
 
 # slim-rails
 gem "slim-rails"
+
+# pry
+gem "pry-rails"
+gem "pry-byebug"
 EGF
 
 file "app/models/settings.rb", <<-'EOC'
