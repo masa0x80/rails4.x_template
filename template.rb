@@ -29,11 +29,11 @@ gem "settingslogic"
 gem "slim-rails"
 
 # pry
-gem "pry-rails"
-gem "pry-byebug"
+gem "pry-rails",  group: [:development, :test]
+gem "pry-byebug", group: [:development, :test]
 
 # rspec
-gem "rspec-rails"
+gem "rspec-rails", group: [:development, :test]
 EGF
 
 file "app/models/settings.rb", <<-'EOC'
