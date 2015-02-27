@@ -31,6 +31,9 @@ gem "slim-rails"
 # pry
 gem "pry-rails"
 gem "pry-byebug"
+
+# rspec
+gem "rspec-rails"
 EGF
 
 file "app/models/settings.rb", <<-'EOC'
@@ -53,3 +56,14 @@ EOC
 
 run "cp config/database.yml config/database.yml.tmpl"
 run "cp config/application.yml.tmpl config/application.yml"
+
+run "bundle install --path=vendor/bundle"
+run "bundle package"
+git :init
+git add: "."
+git commit: "-m 'rails new -m rails4.2/template.rb'"
+
+run "bundle exec rails g rspec:install"
+append_file ".rspec", "--format documentation"
+git add: "."
+git commit: "-m '[command] bundle exec rails g rspec:install'"
