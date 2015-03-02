@@ -83,6 +83,23 @@ git add: "."
 git commit: "-m '[command] bundle instal --path=vendor/bundle; bundle package'"
 
 after_bundle do
+  run "bundle exec cap install"
+  git add: "."
+  git commit: "-m '[command] bundle exec cap install'"
+
+  gsub_file "Capfile", "# require 'capistrano/rbenv'", "require 'capistrano/rbenv'"
+  gsub_file "Capfile", "# require 'capistrano/bundler'", "require 'capistrano/bundler'"
+  inject_into_file "config/deploy.rb", after: "# set :keep_releases, 5\n" do
+    <<-CODE.strip_heredoc
+      
+      # skip capistrano stats
+      Rake::Task['metrics:collect'].clear_actions
+    CODE
+  end
+  gsub_file "config/deploy.rb", "# set :keep_releases, 5", "set :keep_releases, 5"
+  git add: "."
+  git commit: "-m 'updaet capistrano settings'"
+
   run "bundle exec rails g rspec:install"
   append_file ".rspec", "--format documentation"
   git add: "."
