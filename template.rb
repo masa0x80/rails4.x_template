@@ -153,4 +153,16 @@ after_bundle do
       git commit: "-m 'generate for devise with basic parameters'"
     end
   end
+
+  if yes?("use omniauth?")
+    append_file "Gemfile", <<-EOG.strip_heredoc
+      
+      # omniauth
+      gem "omniauth-oauth2"
+    EOG
+
+    run "bundle install"
+    git add: "."
+    git commit: "-m '[gem] omniauth-oauth2'"
+  end
 end
