@@ -1,3 +1,12 @@
+@database = options["database"]
+
+# git init
+git :init
+git add: "."
+git commit: "-m '[command] rails new #{app_name} -d #{@database}'"
+
+run "mv config/database.yml config/database.yml.tmpl"
+
 # .gitignore
 run "cat <<-EGI >> .gitignore
 
@@ -6,6 +15,11 @@ config/database.yml
 config/application.yml
 vendor/bundle
 EGI"
+
+git add: "-A"
+git commit: "-m 'config/database.ymlをgitの管理外に'"
+
+run "cp config/database.yml.tmpl config/database.yml"
 
 # Gemfile
 append_file "Gemfile", <<-EGF
@@ -65,9 +79,8 @@ run "cp config/application.yml.tmpl config/application.yml"
 
 run "bundle install --path=vendor/bundle --jobs=4"
 run "bundle package"
-git :init
 git add: "."
-git commit: "-m 'rails new -m rails4.2/template.rb'"
+git commit: "-m '[command] bundle instal --path=vendor/bundle; bundle package'"
 
 run "bundle exec rails g rspec:install"
 append_file ".rspec", "--format documentation"
