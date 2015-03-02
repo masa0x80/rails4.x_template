@@ -82,14 +82,11 @@ run "bundle package"
 git add: "."
 git commit: "-m '[command] bundle instal --path=vendor/bundle; bundle package'"
 
-run "bundle exec rails g rspec:install"
-append_file ".rspec", "--format documentation"
-git add: "."
-git commit: "-m '[command] bundle exec rails g rspec:install'"
-
 after_bundle do
+  run "bundle exec rails g rspec:install"
+  append_file ".rspec", "--format documentation"
   git add: "."
-  git commit: "-m '[command] bundle exec spring binstab --all'"
+  git commit: "-m '[command] bundle exec rails g rspec:install'"
 
   rakefile("auto_annotate.rake") do
     <<-TASK.strip_heredoc
@@ -111,4 +108,49 @@ after_bundle do
   end
   git add: "."
   git commit: "-m 'settings for annotate automatically'"
+
+  if yes?("use devise?")
+    append_file "Gemfile", <<-EOG.strip_heredoc
+      
+      # devise
+      gem "devise"
+    EOG
+
+    run "bundle install"
+    git add: "."
+    git commit: "-m '[gem] devise'"
+
+    if yes?("generate with basic option?")
+      generate "devise:install"
+      git add: "."
+      git commit: "-m '[command] bundle exec rails g devise:install'"
+
+      generate "devise", "user"
+      git add: "."
+      git commit: "-m '[command] bundle exec rails g devise user'"
+
+      rake "db:create"
+      rake "db:migrate"
+      git add: "."
+      git commit: "-m '[command] bundle exec rake db:migrate'"
+
+      inject_into_file "app/controllers/application_controller.rb", after: "protect_from_forgery with: :exception\n" do
+        "  before_action :authenticate_user!\n"
+      end
+      environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: :development
+      route "root to: 'top#index'"
+      file "app/controllers/top_controller.rb", <<-CODE.strip_heredoc
+        class TopController < ApplicationController
+          def index
+          end
+        end
+      CODE
+      file "app/views/top/index.html.slim", <<-CODE.strip_heredoc
+        h1 Top Page
+      CODE
+
+      git add: "."
+      git commit: "-m 'generate for devise with basic parameters'"
+    end
+  end
 end
