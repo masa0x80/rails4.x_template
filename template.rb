@@ -182,4 +182,49 @@ after_bundle do
     git add: "."
     git commit: "-m '[gem] omniauth-oauth2'"
   end
+
+  if yes?("use bootstrap?")
+    append_file "Gemfile", <<-EOG.strip_heredoc
+      
+      # bootstrap
+      gem "bootstrap-sass"
+      gem "bootstrap-sass-extras"
+      gem "momentjs-rails"
+      gem "bootstrap3-datetimepicker-rails"
+    EOG
+    run "bundle install"
+
+    git add: "."
+    git commit: "-m '[gem] bootstrap-sass, bootstrap-sass-extras, bootstrap-datetimepicker'"
+
+    generate "bootstrap:install"
+    git add: "."
+    git commit: "-m '[command] bundle exec rails g bootstrap:install'"
+
+    generate "bootstrap:layout", "application", "fluid"
+    git add: "."
+    git commit: "-m '[command] bundle exec rails g bootstrap:layout application fluid'"
+
+    run "rm app/views/layouts/application.html.erb"
+    run "mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss"
+    append_file "app/assets/stylesheets/application.scss", <<-CODE.strip_heredoc
+      @import "bootstrap-sprockets";
+      @import "bootstrap";
+      @import "bootstrap-datetimepicker";
+
+      body {
+        padding: 65px;
+      }
+    CODE
+
+    inject_into_file "app/assets/javascripts/application.js", after: "//= require jquery_ujs\n" do
+      <<-CODE.strip_heredoc
+        //= require bootstrap-sprockets
+        //= require moment
+        //= require bootstrap-datetimepicker
+      CODE
+    end
+    git add: "-A"
+    git commit: "-m 'add settings for bootstrap'"
+  end
 end
