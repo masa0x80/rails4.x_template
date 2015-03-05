@@ -227,4 +227,27 @@ after_bundle do
     git add: "-A"
     git commit: "-m 'add settings for bootstrap'"
   end
+
+  if yes?("use kaminari?")
+    append_file "Gemfile", <<-EGF.strip_heredoc
+      
+      # kaminari
+      gem "kaminari"
+    EGF
+
+    run "bundle install"
+    git add: "."
+    git commit: "-m '[gem] kaminari'"
+
+    generate "kaminari:config"
+    git add: "."
+    git commit: "-m '[command] bundle exec rails g kaminari:config'"
+
+    kaminari_theme = ask("which theme of kaminari? [none|bootstrap3|foundation|github|google|purecss|semantic_ui]")
+    unless kaminari_theme == "none"
+      generate "kaminari:view", kaminari_theme
+      git add: "."
+      git commit: "-m '[command] bundle exec rails g kaminari:view #{kaminari_theme}'"
+    end
+  end
 end
