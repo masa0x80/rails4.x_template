@@ -54,6 +54,9 @@ gem "factory_girl_rails"
 
 # annotate
 gem "annotate", group: :development
+
+# bullet
+gem "bullet", group: :development
 EGF
 
 file "app/models/settings.rb", <<-'EOC'
