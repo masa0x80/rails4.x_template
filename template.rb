@@ -1,7 +1,18 @@
 @database = options['database']
 
-# git init
 git :init
+
+# Fix ruby version
+run 'rbenv local $(rbenv version | cut -d ' ' -f 1)'
+git add: '.'
+git commit: "-m 'Fix ruby version'"
+
+# direnv settings
+run 'echo "export PATH=$PWD/bin:$PWD/vendor/bin:$PATH" > .envrc && direnv allow'
+git add: '.'
+git commit: "-m '[command] echo \"export PATH=$PWD/bin:$PWD/vendor/bin:$PATH\" > .envrc && direnv allow'"
+
+# rails new
 git add: '.'
 git commit: "-m '[command] rails new #{app_name} -d #{@database}'"
 
@@ -19,16 +30,13 @@ EGI"
 git add: '.'
 git commit: "-m 'config/database.ymlをgitの管理外に'"
 
-run "cp config/database.yml.tmpl config/database.yml"
+run 'cp config/database.yml.tmpl config/database.yml'
 
 # Gemfile
-append_file "Gemfile", <<-EGF
-
-# See https://github.com/sstephenson/execjs#readme for more supported runtimes
-gem 'therubyracer', platforms: :ruby
-
-# Use Unicorn as the app server
-gem 'unicorn'
+gsub_file 'Gemfile', "gem 'coffee-rails'", "# gem 'coffee-rails'"
+gsub_file 'Gemfile', "# gem 'therubyracer'", "gem 'therubyracer'"
+gsub_file 'Gemfile', "# gem 'unicorn'", "gem 'unicorn'"
+append_file 'Gemfile', <<-EGF
 
 # Use Capistrano for deployment
 gem 'capistrano-rails',    group: :development
@@ -80,18 +88,18 @@ EOC
 run 'cp config/database.yml config/database.yml.tmpl'
 run 'cp config/application.yml.tmpl config/application.yml'
 
-run 'bundle install --path=vendor/bundle --jobs=4'
+run 'bundle install --path=vendor/bundle --binstubs=vendor/bin --jobs=4'
 run 'bundle package'
 git add: '.'
-git commit: "-m '[command] bundle install --path=vendor/bundle; bundle package'"
+git commit: "-m '[command] bundle install --path=vendor/bundle --binstubs=vendor/bin; bundle package'"
 
 after_bundle do
   run 'bundle exec cap install'
   git add: '.'
   git commit: "-m '[command] cap install'"
 
-  gsub_file 'Capfile', '# require 'capistrano/rbenv'', 'require 'capistrano/rbenv''
-  gsub_file 'Capfile', '# require 'capistrano/bundler'', 'require 'capistrano/bundler''
+  gsub_file 'Capfile', "# require 'capistrano/rbenv'", "require 'capistrano/rbenv'"
+  gsub_file 'Capfile', "# require 'capistrano/bundler'", "require 'capistrano/bundler'"
   inject_into_file 'config/deploy.rb', after: "# set :keep_releases, 5\n" do
     <<-CODE.strip_heredoc
       # skip capistrano stats
@@ -99,7 +107,7 @@ after_bundle do
     CODE
   end
   gsub_file 'config/deploy.rb', '# set :keep_releases, 5', 'set :keep_releases, 5'
-  git add: "."
+  git add: '.'
   git commit: "-m 'Update capistrano settings'"
 
   run 'bundle exec rails g rspec:install'
@@ -127,6 +135,10 @@ after_bundle do
   end
   git add: '.'
   git commit: "-m 'settings for annotate automatically'"
+
+  run 'bundle exec spring binstub --all'
+  git add: '.'
+  git commit: "-m '[command] spring binstub --all'"
 
   if yes?('Use devise?')
     append_file 'Gemfile', <<-EOG.strip_heredoc
