@@ -88,7 +88,7 @@ git commit: "-m '[command] bundle instal --path=vendor/bundle; bundle package'"
 after_bundle do
   run 'bundle exec cap install'
   git add: '.'
-  git commit: "-m '[command] bundle exec cap install'"
+  git commit: "-m '[command] cap install'"
 
   gsub_file 'Capfile', '# require 'capistrano/rbenv'', 'require 'capistrano/rbenv''
   gsub_file 'Capfile', '# require 'capistrano/bundler'', 'require 'capistrano/bundler''
@@ -105,7 +105,7 @@ after_bundle do
   run 'bundle exec rails g rspec:install'
   append_file '.rspec', '--format documentation'
   git add: '.'
-  git commit: "-m '[command] bundle exec rails g rspec:install'"
+  git commit: "-m '[command] rails g rspec:install'"
 
   rakefile('auto_annotate.rake') do
     <<-TASK.strip_heredoc
@@ -130,7 +130,7 @@ after_bundle do
 
   if yes?('Use devise?')
     append_file 'Gemfile', <<-EOG.strip_heredoc
-      
+
       # devise
       gem 'devise'
     EOG
@@ -142,16 +142,16 @@ after_bundle do
     if yes?('Generate with basic option?')
       generate 'devise:install'
       git add: '.'
-      git commit: "-m '[command] bundle exec rails g devise:install'"
+      git commit: "-m '[command] rails g devise:install'"
 
       generate 'devise', 'user'
       git add: '.'
-      git commit: "-m '[command] bundle exec rails g devise user'"
+      git commit: "-m '[command] rails g devise user'"
 
       rake 'db:create'
       rake 'db:migrate'
       git add: '.'
-      git commit: "-m '[command] bundle exec rake db:migrate'"
+      git commit: "-m '[command] rake db:migrate'"
 
       inject_into_file 'app/controllers/application_controller.rb', after: "protect_from_forgery with: :exception\n" do
         "  before_action :authenticate_user!\n"
@@ -201,11 +201,11 @@ after_bundle do
 
     generate 'bootstrap:install'
     git add: '.'
-    git commit: "-m '[command] bundle exec rails g bootstrap:install'"
+    git commit: "-m '[command] rails g bootstrap:install'"
 
     generate 'bootstrap:layout', 'application', 'fluid'
     git add: '.'
-    git commit: "-m '[command] bundle exec rails g bootstrap:layout application fluid'"
+    git commit: "-m '[command] rails g bootstrap:layout application fluid'"
 
     run 'rm app/views/layouts/application.html.erb'
     run 'mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss'
@@ -243,13 +243,13 @@ after_bundle do
 
     generate 'kaminari:config'
     git add: '.'
-    git commit: "-m '[command] bundle exec rails g kaminari:config'"
+    git commit: "-m '[command] rails g kaminari:config'"
 
     kaminari_theme = ask('Which theme of kaminari? [none|bootstrap3|foundation|github|google|purecss|semantic_ui]')
     unless kaminari_theme == 'none'
       generate 'kaminari:view', kaminari_theme
       git add: '.'
-      git commit: "-m '[command] bundle exec rails g kaminari:view #{kaminari_theme}'"
+      git commit: "-m '[command] rails g kaminari:view #{kaminari_theme}'"
     end
   end
 end
