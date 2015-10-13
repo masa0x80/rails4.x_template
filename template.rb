@@ -83,7 +83,7 @@ run 'cp config/application.yml.tmpl config/application.yml'
 run 'bundle install --path=vendor/bundle --jobs=4'
 run 'bundle package'
 git add: '.'
-git commit: "-m '[command] bundle instal --path=vendor/bundle; bundle package'"
+git commit: "-m '[command] bundle install --path=vendor/bundle; bundle package'"
 
 after_bundle do
   run 'bundle exec cap install'
@@ -100,7 +100,7 @@ after_bundle do
   end
   gsub_file 'config/deploy.rb', '# set :keep_releases, 5', 'set :keep_releases, 5'
   git add: "."
-  git commit: "-m 'updaet capistrano settings'"
+  git commit: "-m 'Update capistrano settings'"
 
   run 'bundle exec rails g rspec:install'
   append_file '.rspec', '--format documentation'
