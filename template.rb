@@ -19,6 +19,10 @@ end
 if @flag[:use_compass]
   @flag[:use_compass_reset] = yes?("\tUse 'compass/reset'? [y|n]")
 end
+@flag[:use_knife] = yes?('Setup infra using knife-solo? [y|n]')
+if @flag[:use_knife]
+  @flag[:separate_infra_repo] = yes?("\tSeparate infra repository from #{@app_name}? [y|n]")
+end
 
 git :init
 
@@ -53,6 +57,12 @@ append_file '.gitignore', <<-EOF.strip_heredoc
   /vendor/bundle
   /vendor/bin
 EOF
+if @flag[:separate_infra_repo]
+  append_file '.gitignore', <<-EOF.strip_heredoc
+
+    /infra
+  EOF
+end
 
 git add: '.'
 git commit: "-m 'config/{application,database}.ymlをgit管理外に変更'"
@@ -370,6 +380,91 @@ if @flag[:use_compass]
   run "mv #{APPLICATION_CSS} #{APPLICATION_SCSS}" if File.exist?(APPLICATION_CSS)
   append_file APPLICATION_SCSS, "@import 'compass';"
   append_file APPLICATION_SCSS, "@import 'compass/reset';" if @flag[:use_compass_reset]
+
   git add: '.'
   git commit: "-m 'Initialize compass'"
+end
+
+if @flag[:use_knife]
+  run 'mkdir infra'
+
+  config = {with: 'cd infra && '}
+  if @flag[:separate_infra_repo]
+    run 'git init', config
+
+    # Fix ruby version
+    run 'rbenv local $(rbenv version | cut -d " " -f 1)', config
+    run 'git add .ruby-version',                          config
+    run "git commit -m 'Fix ruby version'",               config
+
+    # direnv settings
+    run 'echo \'export PATH=$PWD/bin:$PWD/vendor/bin:$PATH\' > .envrc && direnv allow',        config
+    run 'git add .envrc',                                                                      config
+    run 'git commit -m "$(echo "[command] echo \'$(cat .envrc)\' > .envrc && direnv allow")"', config
+
+    # .gitignore
+    file 'infra/.gitignore', <<-EOF.strip_heredoc
+      .DS_Store
+      *.swp
+
+      /.envrc
+
+      /vendor/bundle
+      /vendor/bin
+      /.chef/data_bag_key
+      /data_bags/secrets/
+    EOF
+
+    run 'git add .',                                                                                            config
+    run "git commit -m 'encrypted_data_bag_secretファイルやdata_bags/secrets/配下のファイルをgit管理外に変更'", config
+
+    Bundler.with_clean_env do
+      run 'bundle init', config
+    end
+    append_file 'infra/Gemfile', <<-EOF.strip_heredoc
+
+      gem 'knife-solo', '~> 0.4.0'
+      gem 'knife-solo_data_bag'
+      gem 'berkshelf'
+    EOF
+    Bundler.with_clean_env do
+      run 'bundle install --path=vendor/bundle --binstubs=vendor/bin --jobs=4 --gemfile=Gemfile; bundle package', config
+    end
+    run 'git add .',                                                                                             config
+    run 'git commit -m \'[command] bundle install --path=vendor/bundle --binstubs=vendor/bin; bundle package\'', config
+  else
+    # .gitignore
+    file 'infra/.gitignore', <<-EOF.strip_heredoc
+      /.chef/data_bag_key
+      /data_bags/secrets/
+    EOF
+
+    git add: '.'
+    git commit: "-m 'encrypted_data_bag_secretファイルやdata_bags/secrets/配下のファイルをgit管理外に変更'"
+
+    append_file 'Gemfile', <<-EOF.strip_heredoc
+
+      group :development do
+        gem 'knife-solo'
+        gem 'knife-solo_data_bag'
+        gem 'berkshelf'
+      end
+    EOF
+    Bundler.with_clean_env do
+      run 'bundle update'
+    end
+    git add: '.'
+    git commit: "-m '[gem] knife-solo, knife-solo_data_bag, berkshelf'"
+  end
+
+  Bundler.with_clean_env do
+    run 'bundle exec knife solo init .', config
+  end
+  run 'git add .',                                         config
+  run 'git commit -m \'[command] knife solo init infra\'', config
+
+  run 'openssl rand -base64 512 > .chef/data_bag_key', config
+  gsub_file 'infra/.chef/knife.rb', /#encrypted_data_bag_secret "data_bag_key"/, 'encrypted_data_bag_secret ".chef/data_bag_key"'
+  run 'git add .',                                          config
+  run 'git commit -m "Add encrypted_data_bag_secret file"', config
 end
