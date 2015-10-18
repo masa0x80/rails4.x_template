@@ -15,6 +15,10 @@ end
 if @flag[:use_kaminari]
   @kaminari_theme = ask("\tWhich kaminari theme? [none|bootstrap3|google|purecss|semantic_ui]")
 end
+@flag[:use_compass] = yes?('Use compass? [y|n]')
+if @flag[:use_compass]
+  @flag[:use_compass_reset] = yes?("\tUse 'compass/reset'? [y|n]")
+end
 
 git :init
 
@@ -349,4 +353,23 @@ if @flag[:use_kaminari]
     git add: '.'
     git commit: "-m '[command] rails g kaminari:views #{@kaminari_theme}'"
   end
+end
+
+if @flag[:use_compass]
+  append_file 'Gemfile', <<-EOF.strip_heredoc
+
+    gem 'compass-rails', git: 'https://github.com/Compass/compass-rails.git', branch: 'master'
+  EOF
+
+  Bundler.with_clean_env do
+    run 'bundle update'
+  end
+  git add: '.'
+  git commit: "-m '[gem] compass-rails'"
+
+  run "mv #{APPLICATION_CSS} #{APPLICATION_SCSS}" if File.exist?(APPLICATION_CSS)
+  append_file APPLICATION_SCSS, "@import 'compass';"
+  append_file APPLICATION_SCSS, "@import 'compass/reset';" if @flag[:use_compass_reset]
+  git add: '.'
+  git commit: "-m 'Initialize compass'"
 end
