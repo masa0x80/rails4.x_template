@@ -33,8 +33,6 @@ git commit: "-m 'Fix ruby version'"
 
 # direnv settings
 run 'echo \'export PATH=$PWD/bin:$PWD/vendor/bin:$PATH\' > .envrc && direnv allow'
-git add: '.envrc'
-git commit: '-m "$(echo "[command] echo \'$(cat .envrc)\' > .envrc && direnv allow")"'
 
 # rails new
 run 'rm -rf test'
@@ -91,10 +89,10 @@ append_file 'Gemfile', <<-EOF.strip_heredoc
 
   group :development do
     # Use Capistrano for deployment
-    gem 'capistrano-rails'
-    gem 'capistrano-rbenv'
-    gem 'capistrano-bundler'
-    gem 'capistrano3-unicorn'
+    gem 'capistrano-rails',    require: false
+    gem 'capistrano-rbenv',    require: false
+    gem 'capistrano-bundler',  require: false
+    gem 'capistrano3-unicorn', require: false
 
     gem 'annotate'
 
@@ -398,9 +396,7 @@ if @flag[:use_knife]
     run "git commit -m 'Fix ruby version'",               config
 
     # direnv settings
-    run 'echo \'export PATH=$PWD/bin:$PWD/vendor/bin:$PATH\' > .envrc && direnv allow',        config
-    run 'git add .envrc',                                                                      config
-    run 'git commit -m "$(echo "[command] echo \'$(cat .envrc)\' > .envrc && direnv allow")"', config
+    run 'echo \'export PATH=$PWD/bin:$PWD/vendor/bin:$PATH\' > .envrc && direnv allow', config
 
     # .gitignore
     file 'infra/.gitignore', <<-EOF.strip_heredoc
@@ -445,7 +441,7 @@ if @flag[:use_knife]
     append_file 'Gemfile', <<-EOF.strip_heredoc
 
       group :development do
-        gem 'knife-solo'
+        gem 'knife-solo', '~> 0.4.0'
         gem 'knife-solo_data_bag'
         gem 'berkshelf'
       end
