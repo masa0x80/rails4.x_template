@@ -198,6 +198,33 @@ end
 git add: '.'
 git commit: "-m '[command] spring binstub --all'"
 
+run 'mkdir -p script/setup'
+file 'script/setup/git-hooks.sh', <<-'CODE'.strip_heredoc
+  #!/bin/sh
+
+  DIR_PATH=`dirname $0`
+  cd $DIR_PATH; cd ../..;
+  PROJECT_ROOT=`pwd`
+
+  TARGET_PATH="${PROJECT_ROOT}/.git/hooks/prepare-commit-msg"
+  cat <<-'EOF'> $TARGET_PATH
+  #!/bin/sh
+
+  if [ "$2" == '' ]; then
+    mv $1 $1.tmp
+    ISSUE_NUMBER=`git rev-parse --abbrev-ref @ | sed -e 's/^[^0-9]*\([0-9]*\).*/\1/'`
+    if [ ! -z $ISSUE_NUMBER ]; then
+      echo "[#${ISSUE_NUMBER}] " > $1
+    fi
+    cat $1.tmp >> $1
+  fi
+  EOF
+  chmod +x $TARGET_PATH
+CODE
+git add: '.'
+git commit: "-m 'Add git-hooks setup file'"
+run 'sh script/setup/git-hooks.sh'
+
 if @flag[:use_devise]
   append_file 'Gemfile', <<-EOF.strip_heredoc
 
@@ -463,4 +490,33 @@ if @flag[:use_knife]
   gsub_file 'infra/.chef/knife.rb', /#encrypted_data_bag_secret "data_bag_key"/, 'encrypted_data_bag_secret ".chef/data_bag_key"'
   run 'git add .',                                          config
   run 'git commit -m "Add encrypted_data_bag_secret file"', config
+
+  if @flag[:separate_infra_repo]
+    run 'mkdir -p script/setup', config
+    file 'infra/script/setup/git-hooks.sh', <<-'CODE'.strip_heredoc
+      #!/bin/sh
+
+      DIR_PATH=`dirname $0`
+      cd $DIR_PATH; cd ../..;
+      PROJECT_ROOT=`pwd`
+
+      TARGET_PATH="${PROJECT_ROOT}/.git/hooks/prepare-commit-msg"
+      cat <<-'EOF'> $TARGET_PATH
+      #!/bin/sh
+
+      if [ "$2" == '' ]; then
+        mv $1 $1.tmp
+        ISSUE_NUMBER=`git rev-parse --abbrev-ref @ | sed -e 's/^[^0-9]*\([0-9]*\).*/\1/'`
+        if [ ! -z $ISSUE_NUMBER ]; then
+          echo "[#${ISSUE_NUMBER}] " > $1
+        fi
+        cat $1.tmp >> $1
+      fi
+      EOF
+      chmod +x $TARGET_PATH
+    CODE
+    run 'git add .',                                config
+    run 'git commit -m "Add git-hooks setup file"', config
+    run 'sh script/setup/git-hooks.sh',              config
+  end
 end
