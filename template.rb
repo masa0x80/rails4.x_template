@@ -435,11 +435,10 @@ if @flag[:use_knife]
       /vendor/bundle
       /vendor/bin
       /.chef/data_bag_key
-      /data_bags/secrets/
     EOF
 
-    run 'git add .',                                                                                            config
-    run "git commit -m 'encrypted_data_bag_secretファイルやdata_bags/secrets/配下のファイルをgit管理外に変更'", config
+    run 'git add .',                                                          config
+    run "git commit -m 'encrypted_data_bag_secretファイルをgit管理外に変更'", config
 
     Bundler.with_clean_env do
       run 'bundle init', config
@@ -459,11 +458,10 @@ if @flag[:use_knife]
     # .gitignore
     file 'infra/.gitignore', <<-EOF.strip_heredoc
       /.chef/data_bag_key
-      /data_bags/secrets/
     EOF
 
     git add: '.'
-    git commit: "-m 'encrypted_data_bag_secretファイルやdata_bags/secrets/配下のファイルをgit管理外に変更'"
+    git commit: "-m 'encrypted_data_bag_secretファイルをgit管理外に変更'"
 
     append_file 'Gemfile', <<-EOF.strip_heredoc
 
@@ -517,6 +515,6 @@ if @flag[:use_knife]
     CODE
     run 'git add .',                                config
     run 'git commit -m "Add git-hooks setup file"', config
-    run 'sh script/setup/git-hooks.sh',              config
+    run 'sh script/setup/git-hooks.sh',             config
   end
 end
