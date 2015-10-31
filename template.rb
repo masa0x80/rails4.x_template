@@ -69,36 +69,52 @@ git commit: "-m 'config/{application,database}.ymlをgit管理外に変更'"
 gsub_file       'Gemfile', /gem 'mysql2'/, "gem 'mysql2', ' ~> 0.3.0'" if @database == 'mysql'
 comment_lines   'Gemfile', /gem 'coffee-rails'/
 uncomment_lines 'Gemfile', /gem 'unicorn'/
-append_file 'Gemfile', <<-EOF.strip_heredoc
+inject_into_file 'Gemfile', before: "group :development, :test do\n" do
+  <<-EOF.strip_heredoc
+    gem 'settingslogic'
 
-  gem 'settingslogic'
+    gem 'slim-rails'
 
-  gem 'slim-rails'
+  EOF
+end
 
-  group :development, :test do
-    # pry
-    gem 'pry-rails'
-    gem 'pry-doc'
-    gem 'pry-byebug'
+inject_into_file 'Gemfile', after: "group :development, :test do\n" do
+  [
+    "  # pry",
+    "  gem 'pry-rails'",
+    "  gem 'pry-doc'",
+    "  gem 'pry-byebug'",
+    "  gem 'pry-stack_explorer'",
+    '',
+    "  gem 'awesome_print'",
+    "  gem 'rails-flog', require: 'flog'",
+    '',
+    "  gem 'rspec-rails'",
+    "  gem 'spring-commands-rspec'",
+    '',
+    "  gem 'factory_girl_rails'",
+    "  gem 'ffaker'",
+    '', '',
+  ].join("\n")
+end
 
-    gem 'rspec-rails'
-    gem 'spring-commands-rspec'
-
-    gem 'factory_girl_rails'
-  end
-
-  group :development do
-    # Use Capistrano for deployment
-    gem 'capistrano-rails',    require: false
-    gem 'capistrano-rbenv',    require: false
-    gem 'capistrano-bundler',  require: false
-    gem 'capistrano3-unicorn', require: false
-
-    gem 'annotate'
-
-    gem 'bullet'
-  end
-EOF
+inject_into_file 'Gemfile', after: "group :development do\n" do
+  [
+    "  # Use Capistrano for deployment",
+    "  gem 'capistrano-rails',    require: false",
+    "  gem 'capistrano-rbenv',    require: false",
+    "  gem 'capistrano-bundler',  require: false",
+    "  gem 'capistrano3-unicorn', require: false",
+    '',
+    "  gem 'annotate'",
+    '',
+    "  gem 'bullet'",
+    '',
+    "  gem 'better_errors'",
+    "  gem 'quiet_assets'",
+    '', '',
+  ].join("\n")
+end
 git add: '.'
 git commit: "-m '各種gemの追加'"
 
@@ -245,10 +261,12 @@ git commit: "-m 'Add git-hooks setup file'"
 run 'sh script/setup/git-hooks.sh'
 
 if @flag[:use_devise]
-  append_file 'Gemfile', <<-EOF.strip_heredoc
+  inject_into_file 'Gemfile', before: "group :development, :test do\n" do
+    <<-CODE.strip_heredoc
+      gem 'devise'
 
-    gem 'devise'
-  EOF
+    CODE
+  end
 
   Bundler.with_clean_env do
     run 'bundle update'
@@ -277,7 +295,9 @@ if @flag[:use_devise]
     git commit: "-m '[command] rake db:migrate'"
 
     inject_into_file 'app/controllers/application_controller.rb', after: "protect_from_forgery with: :exception\n" do
-      "  before_action :authenticate_user!\n"
+      [
+        "  before_action :authenticate_user!"
+      ].join("\n")
     end
     environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: :development
     file 'app/controllers/top_controller.rb', <<-CODE.strip_heredoc
@@ -296,10 +316,11 @@ if @flag[:use_devise]
   end
 
   if @flag[:use_omniauth]
-    append_file 'Gemfile', <<-EOF.strip_heredoc
-
-      gem 'omniauth-oauth2'
-    EOF
+    inject_into_file 'Gemfile', after: "gem 'devise'\n" do
+      <<-CODE.strip_heredoc
+        gem 'omniauth-oauth2'
+      CODE
+    end
 
     Bundler.with_clean_env do
       run 'bundle update'
@@ -310,14 +331,16 @@ if @flag[:use_devise]
 end
 
 if @flag[:use_bootstrap]
-  append_file 'Gemfile', <<-EOF.strip_heredoc
+  inject_into_file 'Gemfile', before: "group :development, :test do\n" do
+    <<-CODE.strip_heredoc
+      # bootstrap
+      gem 'bootstrap-sass'
+      gem 'bootstrap-sass-extras'
+      gem 'momentjs-rails'
+      gem 'bootstrap3-datetimepicker-rails'
 
-    # bootstrap
-    gem 'bootstrap-sass'
-    gem 'bootstrap-sass-extras'
-    gem 'momentjs-rails'
-    gem 'bootstrap3-datetimepicker-rails'
-  EOF
+    CODE
+  end
   Bundler.with_clean_env do
     run 'bundle update'
   end
@@ -383,10 +406,12 @@ unless @flag[:initialize_devise]
 end
 
 if @flag[:use_kaminari]
-  append_file "Gemfile", <<-EOF.strip_heredoc
+  inject_into_file 'Gemfile', before: "group :development, :test do\n" do
+    <<-CODE.strip_heredoc
+      gem 'kaminari'
 
-    gem 'kaminari'
-  EOF
+    CODE
+  end
 
   Bundler.with_clean_env do
     run 'bundle update'
@@ -410,10 +435,12 @@ if @flag[:use_kaminari]
 end
 
 if @flag[:use_compass]
-  append_file 'Gemfile', <<-EOF.strip_heredoc
+  inject_into_file 'Gemfile', before: "group :development, :test do\n" do
+    <<-CODE.strip_heredoc
+      gem 'compass-rails', git: 'https://github.com/Compass/compass-rails.git', branch: 'master'
 
-    gem 'compass-rails', git: 'https://github.com/Compass/compass-rails.git', branch: 'master'
-  EOF
+    CODE
+  end
 
   Bundler.with_clean_env do
     run 'bundle update'
@@ -482,14 +509,14 @@ if @flag[:use_knife]
     git add: '.'
     git commit: "-m 'encrypted_data_bag_secretファイルをgit管理外に変更'"
 
-    append_file 'Gemfile', <<-EOF.strip_heredoc
-
-      group :development do
-        gem 'knife-solo', '~> 0.4.0'
-        gem 'knife-solo_data_bag'
-        gem 'berkshelf'
-      end
-    EOF
+    inject_into_file 'Gemfile', after: "group :development do\n" do
+      [
+        "  gem 'knife-solo', '~> 0.4.0'",
+        "  gem 'knife-solo_data_bag'",
+        "  gem 'berkshelf'",
+        '', '',
+      ].join("\n")
+    end
     Bundler.with_clean_env do
       run 'bundle update'
     end
