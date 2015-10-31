@@ -178,12 +178,17 @@ end
 git add: '.'
 git commit: "-m '[command] rails g rspec:install'"
 
+uncomment_lines 'spec/rails_helper.rb', /Dir\[Rails\.root\.join\('spec\/support\//
 append_file '.rspec', '--format documentation'
-inject_into_file 'spec/spec_helper.rb', after: "RSpec.configure do |config|\n" do
-  "  config.include FactoryGirl::Syntax::Methods\n"
+file 'spec/support/factory_girl.rb' do
+  <<-EOF.strip_heredoc
+    RSpec.configure do |config|
+      config.include FactoryGirl::Syntax::Methods
+    end
+  EOF
 end
 git add: '.'
-git commit: "-m 'Initialize rspec'"
+git commit: "-m 'Initialize rspec, factory_girl'"
 
 rakefile('auto_annotate.rake') do
   <<-CODE.strip_heredoc
