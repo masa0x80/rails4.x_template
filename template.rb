@@ -124,6 +124,20 @@ run 'cp config/application.yml.tmpl config/application.yml'
 git add: '.'
 git commit: "-m 'Initialize settingslogic'"
 
+inject_into_file 'config/environments/development.rb', after: "Rails.application.configure do\n" do
+  [
+    '  # Bullet settings',
+    '  Bullet.enable        = true',
+    '  Bullet.alert         = true',
+    '  Bullet.console       = true',
+    '  Bullet.bullet_logger = true',
+    '  Bullet.rails_logger  = true',
+    '', '',
+  ].join("\n")
+end
+git add: '.'
+git commit: "-m 'Initialize bullet'"
+
 if @database == 'mysql'
   inject_into_file 'config/database.yml.tmpl', after: "  encoding: utf8\n" do
     "  charset: utf8\n  collation: utf8_general_ci\n"
