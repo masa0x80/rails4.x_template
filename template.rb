@@ -206,8 +206,13 @@ uncomment_lines 'spec/rails_helper.rb', /Dir\[Rails\.root\.join\('spec\/support\
 append_file '.rspec', '--format documentation'
 file 'spec/support/factory_girl.rb' do
   <<-EOF.strip_heredoc
+    require 'factory_girl'
+
     RSpec.configure do |config|
       config.include FactoryGirl::Syntax::Methods
+      config.before(:suite) do
+        FactoryGirl.reload
+      end
     end
   EOF
 end
