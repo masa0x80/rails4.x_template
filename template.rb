@@ -51,6 +51,7 @@ append_file '.gitignore', <<-EOF.strip_heredoc
 
   .DS_Store
   *.swp
+  Thumbs.db
 
   /.envrc
 
