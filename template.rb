@@ -15,10 +15,13 @@ end
 if @flag[:use_kaminari]
   @kaminari_theme = ask("\tWhich kaminari theme? [none|bootstrap3|google|purecss|semantic_ui]")
 end
-@flag[:use_compass] = yes?('Use compass? [y|n]')
-if @flag[:use_compass]
-  @flag[:use_compass_reset] = yes?("\tUse 'compass/reset'? [y|n]")
+unless @flag[:use_bootstrap]
+  @flag[:use_compass] = yes?('Use compass? [y|n]')
+  if @flag[:use_compass]
+    @flag[:use_compass_reset] = yes?("\tUse 'compass/reset'? [y|n]")
+  end
 end
+@flag[:use_browserify] = yes?('Use browserify? [y|n]')
 @flag[:use_knife] = yes?('Setup infra using knife-solo? [y|n]')
 if @flag[:use_knife]
   @flag[:separate_infra_repo] = yes?("\tSeparate infra repository from #{@app_name}? [y|n]")
@@ -269,6 +272,8 @@ file 'script/setup/git-hooks.sh', <<-'CODE'.strip_heredoc
   fi
   EOF
   chmod +x $TARGET_PATH
+
+  echo 'Complete!'
 CODE
 git add: '.'
 git commit: "-m 'Add git-hooks setup file'"
@@ -467,12 +472,68 @@ if @flag[:use_compass]
   git add: '.'
   git commit: "-m '[gem] compass-rails'"
 
-  run "mv #{APPLICATION_CSS} #{APPLICATION_SCSS}" if File.exist?(APPLICATION_CSS)
-  append_file APPLICATION_SCSS, "@import 'compass';"
-  append_file APPLICATION_SCSS, "@import 'compass/reset';" if @flag[:use_compass_reset]
+  run "rm #{APPLICATION_CSS}"  if File.exist?(APPLICATION_CSS)
+  run "rm #{APPLICATION_SCSS}" if File.exist?(APPLICATION_SCSS)
+  file APPLICATION_SCSS, "@import 'compass';"
+  if @flag[:use_compass_reset]
+    append_file APPLICATION_SCSS, <<-CODE.strip_heredoc
+      @import 'compass/reset';
+    CODE
+  end
 
   git add: '.'
   git commit: "-m 'Initialize compass'"
+end
+
+if @flag[:use_browserify]
+  inject_into_file 'Gemfile', before: "group :development, :test do\n" do
+    <<-CODE.strip_heredoc
+      gem 'browserify-rails'
+
+    CODE
+  end
+
+  Bundler.with_clean_env do
+    run 'bundle update'
+  end
+  git add: '.'
+  git commit: "-m '[gem] browserify-rails'"
+
+  file 'package.json', <<-CODE.strip_heredoc
+    {
+      "private": true,
+      "devDependencies": {
+        "babel-plugin-transform-es2015-modules-commonjs": "^6.3.16",
+        "babel-preset-es2015": "^6.3.13",
+        "babelify": "^7.2.0",
+        "browserify": "^12.0.1",
+        "browserify-incremental": "^3.0.1"
+      }
+    }
+  CODE
+	append_file '.gitignore', <<-EOF.strip_heredoc
+
+    node_modules
+	EOF
+  file '.babelrc', <<-CODE.strip_heredoc
+    {
+      "presets": ["es2015"],
+      "plugins": ["transform-es2015-modules-commonjs"]
+    }
+  CODE
+  run 'rm app/assets/javascripts/application.js'
+  run 'touch app/assets/javascripts/application.js'
+  inject_into_file 'config/application.rb', after: "config.active_record.raise_in_transactional_callbacks = true\n" do
+    indented_heredoc(<<-CODE, 4)
+      config.browserify_rails.commandline_options = '-t babelify'
+    CODE
+  end
+  git add: '.'
+  git commit: "-m 'Initialize browserify-rails'"
+
+	run 'npm install'
+  git add: '.'
+  git commit: "-m '[command] npm install'"
 end
 
 if @flag[:use_knife]
@@ -577,6 +638,8 @@ if @flag[:use_knife]
       fi
       EOF
       chmod +x $TARGET_PATH
+
+      echo 'Complete!'
     CODE
     run 'git add .',                                config
     run 'git commit -m "Add git-hooks setup file"', config
