@@ -189,13 +189,6 @@ git commit: "-m '[command] cap install'"
 
 uncomment_lines 'Capfile', /require 'capistrano\/rbenv/
 uncomment_lines 'Capfile', /require 'capistrano\/bundler/
-inject_into_file 'config/deploy.rb', after: "# set :keep_releases, 5\n" do
-  <<-CODE.strip_heredoc
-
-    # skip capistrano stats
-    Rake::Task['metrics:collect'].clear_actions
-  CODE
-end
 uncomment_lines 'config/deploy.rb', /set :keep_releases, 5/
 git add: '.'
 git commit: "-m 'Update capistrano settings'"
