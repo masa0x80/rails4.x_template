@@ -78,6 +78,7 @@ git commit: "-m 'config/{application,database}.ymlをgit管理外に変更'"
 gsub_file       'Gemfile', /gem 'mysql2'/, "gem 'mysql2', ' ~> 0.3.0'" if @database == 'mysql'
 comment_lines   'Gemfile', /gem 'coffee-rails'/
 uncomment_lines 'Gemfile', /gem 'unicorn'/
+uncomment_lines 'Gemfile', /gem 'therubyracer'/
 inject_into_file 'Gemfile', before: "group :development, :test do\n" do
   <<-EOF.strip_heredoc
     gem 'settingslogic'
