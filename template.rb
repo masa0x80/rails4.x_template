@@ -116,7 +116,7 @@ inject_into_file 'Gemfile', after: "group :development do\n" do
     gem 'capistrano-bundler',  require: false
     gem 'capistrano3-unicorn', require: false
 
-    gem 'annotate'
+    # gem 'annotate'
 
     gem 'bullet'
 
@@ -217,26 +217,26 @@ end
 git add: '.'
 git commit: "-m 'Initialize rspec, factory_girl'"
 
-rakefile('auto_annotate.rake') do
-  <<-CODE.strip_heredoc
-    task :annotate do
-      puts 'Annotating models...'
-      system 'bundle exec annotate'
-    end
-
-    if Rails.env.to_sym == :development
-      Rake::Task['db:migrate'].enhance do
-        Rake::Task['annotate'].invoke
-      end
-
-      Rake::Task['db:rollback'].enhance do
-        Rake::Task['annotate'].invoke
-      end
-    end
-  CODE
-end
-git add: '.'
-git commit: "-m 'Auto-annotate settings'"
+# rakefile('auto_annotate.rake') do
+#   <<-CODE.strip_heredoc
+#     task :annotate do
+#       puts 'Annotating models...'
+#       system 'bundle exec annotate'
+#     end
+#
+#     if Rails.env.to_sym == :development
+#       Rake::Task['db:migrate'].enhance do
+#         Rake::Task['annotate'].invoke
+#       end
+#
+#       Rake::Task['db:rollback'].enhance do
+#         Rake::Task['annotate'].invoke
+#       end
+#     end
+#   CODE
+# end
+# git add: '.'
+# git commit: "-m 'Auto-annotate settings'"
 
 Bundler.with_clean_env do
   run 'bundle exec spring binstub --all'
