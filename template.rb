@@ -555,6 +555,7 @@ if @flag[:use_knife]
       /vendor/bundle
       /vendor/bin
       /.chef/data_bag_key
+      /.vagrant
     EOF
 
     run 'git add .',                                                          config
@@ -578,6 +579,7 @@ if @flag[:use_knife]
     # .gitignore
     file 'infra/.gitignore', <<-EOF.strip_heredoc
       /.chef/data_bag_key
+      /.vagrant
     EOF
 
     git add: '.'
