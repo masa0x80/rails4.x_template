@@ -72,7 +72,7 @@ if @flag[:separate_infra_repo]
 end
 
 git add: '.'
-git commit: "-m 'config/{application,database}.ymlをgit管理外に変更'"
+git commit: "-m 'Ignore config/{application,database}.yml'"
 
 # Gemfile
 gsub_file       'Gemfile', /gem 'mysql2'/, "gem 'mysql2', ' ~> 0.3.0'" if @database == 'mysql'
@@ -126,7 +126,7 @@ inject_into_file 'Gemfile', after: "group :development do\n" do
   CODE
 end
 git add: '.'
-git commit: "-m '各種gemの追加'"
+git commit: "-m 'Add several useful gems'"
 
 file 'app/models/settings.rb', <<-'EOF'.strip_heredoc
   class Settings < Settingslogic
@@ -172,7 +172,7 @@ if @database == 'mysql'
     CODE
   end
   git add: '.'
-  git commit: "-m 'DBのcollation設定をutf8_general_ciに変更'"
+  git commit: "-m 'Fix DB collation config'"
 end
 run 'cp config/database.yml.tmpl config/database.yml'
 
@@ -558,8 +558,8 @@ if @flag[:use_knife]
       /.vagrant
     EOF
 
-    run 'git add .',                                                          config
-    run "git commit -m 'encrypted_data_bag_secretファイルをgit管理外に変更'", config
+    run 'git add .',                                config
+    run "git commit -m 'Ignore data_bag_key file'", config
 
     Bundler.with_clean_env do
       run 'bundle init', config
@@ -583,7 +583,7 @@ if @flag[:use_knife]
     EOF
 
     git add: '.'
-    git commit: "-m 'encrypted_data_bag_secretファイルをgit管理外に変更'"
+    git commit: "-m 'Ignore data_bag_key file'"
 
     inject_into_file 'Gemfile', after: "group :development do\n" do
       indented_heredoc(<<-CODE, 2)
