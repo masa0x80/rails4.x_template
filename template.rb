@@ -181,6 +181,12 @@ end
 git add: '.'
 git commit: '-m \'[command] bundle install --path=vendor/bundle --binstubs=vendor/bin; bundle package\''
 
+# disable capistrano-harrow
+append_file '.git/config', <<-EOF.strip_heredoc
+[harrow]
+  disabled = true
+EOF
+
 Bundler.with_clean_env do
   run 'bundle exec cap install'
 end
