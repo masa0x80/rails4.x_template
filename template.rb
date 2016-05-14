@@ -75,7 +75,6 @@ git add: '.'
 git commit: "-m 'Ignore config/{application,database}.yml'"
 
 # Gemfile
-gsub_file       'Gemfile', /gem 'mysql2'/, "gem 'mysql2', ' ~> 0.3.0'" if @database == 'mysql'
 comment_lines   'Gemfile', /gem 'coffee-rails'/
 uncomment_lines 'Gemfile', /gem 'unicorn'/
 uncomment_lines 'Gemfile', /gem 'therubyracer'/
