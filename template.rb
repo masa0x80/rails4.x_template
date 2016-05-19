@@ -22,9 +22,9 @@ unless @flag[:use_bootstrap]
   end
 end
 @flag[:use_browserify] = yes?('Use browserify? [y|n]')
-@flag[:use_knife] = yes?('Setup infra using knife-solo? [y|n]')
+@flag[:use_knife] = yes?('Use knife-solo? [y|n]')
 if @flag[:use_knife]
-  @flag[:separate_infra_repo] = yes?("\tSeparate infra repository from #{@app_name}? [y|n]")
+  @flag[:separate_provisioning_repo] = yes?("\tSeparate provisioning repository from #{@app_name}? [y|n]")
 end
 
 def indented_heredoc(data, indent = 0)
@@ -64,10 +64,10 @@ append_file '.gitignore', <<-EOF.strip_heredoc
   /vendor/bundle
   /vendor/bin
 EOF
-if @flag[:separate_infra_repo]
+if @flag[:separate_provisioning_repo]
   append_file '.gitignore', <<-EOF.strip_heredoc
 
-    /infra
+    /provisioning
   EOF
 end
 
@@ -536,10 +536,10 @@ if @flag[:use_browserify]
 end
 
 if @flag[:use_knife]
-  run 'mkdir infra'
+  run 'mkdir provisioning'
 
-  config = {with: 'cd infra && '}
-  if @flag[:separate_infra_repo]
+  config = {with: 'cd provisioning && '}
+  if @flag[:separate_provisioning_repo]
     run 'git init', config
 
     # Fix ruby version
@@ -551,7 +551,7 @@ if @flag[:use_knife]
     run 'echo \'export PATH=$PWD/bin:$PWD/vendor/bin:$PATH\' > .envrc && direnv allow', config
 
     # .gitignore
-    file 'infra/.gitignore', <<-EOF.strip_heredoc
+    file 'provisioning/.gitignore', <<-EOF.strip_heredoc
       .DS_Store
       *.swp
 
@@ -569,7 +569,7 @@ if @flag[:use_knife]
     Bundler.with_clean_env do
       run 'bundle init', config
     end
-    append_file 'infra/Gemfile', <<-EOF.strip_heredoc
+    append_file 'provisioning/Gemfile', <<-EOF.strip_heredoc
 
       gem 'knife-solo', '~> 0.4.0'
       gem 'knife-solo_data_bag'
@@ -582,7 +582,7 @@ if @flag[:use_knife]
     run 'git commit -m \'[command] bundle install --path=vendor/bundle --binstubs=vendor/bin; bundle package\'', config
   else
     # .gitignore
-    file 'infra/.gitignore', <<-EOF.strip_heredoc
+    file 'provisioning/.gitignore', <<-EOF.strip_heredoc
       /.chef/data_bag_key
       /.vagrant
     EOF
@@ -609,16 +609,16 @@ if @flag[:use_knife]
     run 'bundle exec knife solo init .', config
   end
   run 'git add .',                                         config
-  run 'git commit -m \'[command] knife solo init infra\'', config
+  run 'git commit -m \'[command] knife solo init provisioning\'', config
 
   run 'openssl rand -base64 512 > .chef/data_bag_key', config
-  gsub_file 'infra/.chef/knife.rb', /#encrypted_data_bag_secret "data_bag_key"/, 'encrypted_data_bag_secret ".chef/data_bag_key"'
+  gsub_file 'provisioning/.chef/knife.rb', /#encrypted_data_bag_secret "data_bag_key"/, 'encrypted_data_bag_secret ".chef/data_bag_key"'
   run 'git add .',                                          config
   run 'git commit -m "Add encrypted_data_bag_secret file"', config
 
-  if @flag[:separate_infra_repo]
+  if @flag[:separate_provisioning_repo]
     run 'mkdir -p script/setup', config
-    file 'infra/script/setup/git-hooks.sh', <<-'CODE'.strip_heredoc
+    file 'provisioning/script/setup/git-hooks.sh', <<-'CODE'.strip_heredoc
       #!/bin/sh
 
       DIR_PATH=`dirname $0`
