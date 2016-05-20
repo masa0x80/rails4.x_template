@@ -555,6 +555,8 @@ if @flag[:use_knife]
       .DS_Store
       *.swp
 
+      /.bundle
+
       /.envrc
 
       /vendor/bundle
